@@ -1,0 +1,129 @@
+\chapter{Технологическая часть}
+
+В данном разделе будут указаны средства реализации, будут представлены реализации алгоритмов, а также функциональные тесты.
+
+\section{Средства реализации}
+
+Реализация данной лабораторной работы выполнялась при помощи языка программирования Python.  В текущем лабораторном задании необходимо определить процессорное время, затрачиваемое на выполнение программы, а также ввести многопоточное программирование. Все необходимые инструменты для этого имеются в выбранном
+языке программирования\cite{python}.
+
+Замеры времени проводились при помощи функции process\_time из библиотеки time \cite{python-time}.
+Многопоточное программирование было реализованно с помощью модуля ThreadPoolExecutor.
+
+\section{Сведения о модулях программы}
+
+Программа состоит из следующих модулей:
+
+\begin{itemize}
+	\item main.py - главный файл программы, предоставляющий пользователю меню для выполнения основных функций;
+	\item func.py - файл, содержащий функции кластеризации и сравнения времени.
+\end{itemize}
+
+\section{Реализация алгоритмов}
+
+Алгоритм кластеризации методом k-средних и его параллельная реализация приведены в листингах \ref{lst:standard}, \ref{lst:optimized}.
+\clearpage
+
+\begin{center}
+\captionsetup{justification=raggedright,singlelinecheck=off}
+\begin{lstlisting}[label=lst:standard,caption=Алгоритм кластеризации методом k-средних]
+def clusterization(array, k):
+	n = len(array)
+	dim = len(array[0])
+	cluster = [[0 for i in range(dim)] for q in range(k)]
+	cluster_content = [[] for i in range(k)]
+	for i in range(dim):
+		for q in range(k):
+			cluster[q][i] = randint(0, MAX_CLUSTER_VAL)
+	cluster_content = data_distribution(array, cluster, n, k, dim)
+	privious_cluster = copy.deepcopy(cluster)
+
+	while 1:
+		cluster = cluster_update(cluster, cluster_content, dim)
+		cluster_content = data_distribution(array, cluster,n,k,dim)
+		if cluster == privious_cluster:
+			break
+		privious_cluster = copy.deepcopy(cluster)
+	visualisation_3d(cluster_content)
+\end{lstlisting} 
+\end{center}
+\clearpage
+
+\begin{center}
+\captionsetup{justification=raggedright,singlelinecheck=off}
+\begin{lstlisting}[label=lst:optimized,caption=Параллельная реализация алгоритма кластеризации]
+def asinc_clusterization(array, cluster, n, k, dim):
+    for i in range(n):
+	min_distance = float('inf')
+	situable_cluster = -1
+	for j in range(k):
+		distance = 0
+		for q in range(0,dim, 3):
+
+		with ThreadPoolExecutor() as executor:
+			res = executor.map(summing(array[i][q], cluster[j][q] ))
+			for num in res:
+				distance += num
+		distance = distance ** (1 / 2)
+		if distance < min_distance:
+			min_distance = distance
+			situable_cluster = j
+
+	cluster_content[situable_cluster].append(array[i])
+\end{lstlisting}
+\end{center}
+
+\section{Функциональные тесты}
+
+В таблице \ref{tbl:func_test} приведены функциональные тесты для функций, реализующих алгоритмы кластеризации методом k-средних. Все тесты пройдены успешно. \newpage
+
+\begin{table}[h]
+	\begin{center}
+		\begin{threeparttable}
+			\captionsetup{justification=raggedright,singlelinecheck=off}
+			\caption{\label{tbl:func_test} Функциональные тесты}
+			\begin{tabular}{|c@{\hspace{7mm}}|c@{\hspace{7mm}}|c@{\hspace{7mm}}|c@{\hspace{7mm}}|c@{\hspace{7mm}}|c@{\hspace{7mm}}|}
+				\hline
+				 Массив входных чисел & Количествово кластеров & Распределение \\ 
+				\hline
+				$\begin{pmatrix}
+					1 & 2 & 3 & 4 & 5
+				\end{pmatrix}$ &
+				$\begin{pmatrix} 
+					2 \\ 
+				\end{pmatrix}$ &
+				$\begin{pmatrix}
+					1 & 2 \\
+					3 & 4 & 5
+				\end{pmatrix}$ \\ \hline
+				$\begin{pmatrix}
+					1 & 2 & 3 & 4 & 5
+				\end{pmatrix}$ &
+				$\begin{pmatrix} 
+					5 \\ 
+				\end{pmatrix}$ &
+				$\begin{pmatrix}
+					1 \\
+					2 \\
+					3 \\
+					4 \\
+					5 
+				\end{pmatrix}$ \\ \hline
+				$\begin{pmatrix}
+					1 & 2 & 3 & 4 & 5
+				\end{pmatrix}$ &
+				$\begin{pmatrix} 
+					1 \\ 
+				\end{pmatrix}$ &
+				$\begin{pmatrix}
+					1 & 2 & 3 & 4 & 5
+				\end{pmatrix}$ \\ \hline				
+			\end{tabular}
+		\end{threeparttable}
+	\end{center}
+	
+\end{table}
+
+\section{Вывод}
+
+Были реализованы функции алгоритмов кластеризции. Было проведено функциональное тестирование указанных функций.

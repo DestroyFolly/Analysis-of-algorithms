@@ -1,0 +1,187 @@
+\chapter{Технологическая часть}
+
+В данном разделе будут рассмотрены средства реализации, а также представлены листинги алгоритмов определения расстояния Левенштейна и Дамерау-Левенштейна.
+
+\section{Средства реализации}
+В данной работе для реализации был выбран язык программирования $Python \cite{python-lang}$. В текущем лабораторном задании необходимо определить процессорное время, затрачиваемое на выполнение программы, а также построить графики. Все необходимые инструменты для этого уже имеются в выбранном языке программирования.
+
+Время работы было замерено с помощью функции \textit{process\_time(...)} из библиотеки $time \cite{python-lang-time}$.
+
+
+\section{Реализация алгоритмов}
+
+В листингах \ref{lst:lev_rec}-\ref{lst:dam_lev_rec} представлены реализации алгоритмов нахождения расстояния Левенштейна и Дамерау-Левенштейна.
+
+\clearpage
+
+\begin{center}
+	\captionsetup{justification=raggedright,singlelinecheck=off}
+	\begin{lstlisting}[label=lst:lev_rec,caption=Алгоритм нахождения расстояния Левенштейна (рекурсивный)]
+		def levenstein_recursive(str1, str2):
+		l1 = len(str1)
+		l2 = len(str2)
+		
+		if ((l1 == 0) or (l2 == 0)):
+		return abs(l1 - l2)
+		
+		flag = 0
+		
+		if (str1[-1] != str2[-1]):
+		flag = 1
+		
+		min_distance = min(levenstein_recursive(str1[:-1], str2) + 1,
+		levenstein_recursive(str1, str2[:-1]) + 1,
+		levenstein_recursive(str1[:-1], str2[:-1]) + flag)
+		
+		return min_distance
+	\end{lstlisting}
+\end{center}
+
+
+\begin{center}
+	\captionsetup{justification=raggedright,singlelinecheck=off}
+	\begin{lstlisting}[label=lst:lev_mat,caption=Алгоритм нахождения расстояния Левенштейна (матричный)]
+		def levenstein_matrix(str1, str2):
+		l1 = len(str1)
+		l2 = len(str2)
+		matrix = create_lev_matrix(l1 + 1, l2 + 1)
+		
+		for i in range(1, l1 + 1):
+		for j in range(1, l2 + 1):
+		add = matrix[i - 1][j] + 1
+		delete = matrix[i][j - 1] + 1
+		change = matrix[i - 1][j - 1]
+		
+		if (str1[i - 1] != str2[j - 1]):
+		change += 1
+		
+		matrix[i][j] = min(add, delete, change)
+		
+		return matrix[l1][l2]
+	\end{lstlisting}
+\end{center}
+
+
+\begin{center}
+	\captionsetup{justification=raggedright,singlelinecheck=off}
+	\begin{lstlisting}[label=lst:lev_cach,caption=Алгоритм нахождения расстояния Левенштейна c использованием кеша в виде матрицы]
+		def recursive_for_levenstein_cache(str1, str2, n, m, matrix):
+		if (matrix[n][m] != -1):
+		return matrix[n][m]
+		
+		if (n == 0):
+		matrix[n][m] = m
+		return matrix[n][m]
+		
+		if ((n > 0) and (m == 0)):
+		matrix[n][m] = n
+		return matrix[n][m]
+		
+		add = recursive_for_levenstein_cache(str1, str2, n - 1, m, matrix) + 1
+		delete = recursive_for_levenstein_cache(str1, str2, n, m - 1, matrix) + 1
+		change = recursive_for_levenstein_cache(str1, str2, n - 1, m - 1, matrix)
+		
+		if (str1[n - 1] != str2[m - 1]):
+		change += 1 # flag
+		
+		matrix[n][m] = min(add, delete, change)
+		
+		return matrix[n][m]
+		
+		def levenstein_cache_matrix(str1, str2):
+		n = len(str1)
+		m = len(str2)
+		
+		matrix = create_lev_matrix(n + 1, m + 1)
+		
+		for i in range(n + 1):
+		for j in range(m + 1):
+		matrix[i][j] = -1
+		
+		recursive_for_levenstein_cache(str1, str2, n, m, matrix)
+		
+		return matrix[n][m]
+	\end{lstlisting}
+\end{center}
+
+
+\begin{center}
+	\captionsetup{justification=raggedright,singlelinecheck=off}
+	\begin{lstlisting}[label=lst:dam_lev_rec,caption=Алгоритм нахождения расстояния Дамерау-Левенштейна (рекурсивный)]
+		def damerau_levenstein_recursive(str1, str2):
+		l1 = len(str1)
+		l2 = len(str2)
+		
+		if ((l1 == 0) or (l2 == 0)):
+		if (l1 != 0):
+		return l1
+		
+		if (l2 != 0):
+		return l2
+		
+		return 0
+		
+		flag = 0 if (str1[-1] == str2[-1]) else 1
+		
+		add = damerau_levenstein_recursive(str1[:l1 - 1], str2) + 1
+		delete = damerau_levenstein_recursive(str1, str2[:l2 - 1]) + 1
+		change = damerau_levenstein_recursive(str1[:l1 - 1], str2[:l2 - 1]) + flag
+		extra_change = damerau_levenstein_recursive(str1[:l1 - 2], str2[:l2 - 2]) + 1
+		
+		if ((l1 > 1) and (l2 > 1) and (str1[-1] == str2[-2]) and (str1[-2] == str2[-1])):
+		minimum  = min(add, delete, change, extra_change)
+		
+		else:
+		minimum = min(add, delete, change)
+		
+		return minimum
+	\end{lstlisting}
+\end{center}
+
+\section{Функциональные тесты}
+
+В таблице \ref{tbl:functional_test} приведены тесты для функций, реализующих алгоритмы нахождения расстояния Левенштейна и Дамерау-Левенштейна. Тесты \textit{для всех алгоритмов} пройдены успешно.
+
+\begin{table}[h]
+	\begin{center}
+		\begin{threeparttable}
+			\captionsetup{justification=raggedright,singlelinecheck=off}
+			\caption{\label{tbl:functional_test} Функциональные тесты}
+			\begin{tabular}{|c|c|c|c|c|}
+				\hline
+				& & & \multicolumn{2}{c|}{Ожидаемый результат} \\
+				\hline
+				№&Строка 1&Строка 2&Левенштейн&Дамерау-Л. \\
+				\hline
+				1&"пустая строка"&"пустая строка"&0&0 \\
+				\hline
+				2&"пустая строка"&текст&4&4 \\
+				\hline
+				3&слово&"пустая строка"&5&5 \\
+				\hline
+				4&слово&лово&1&1 \\
+				\hline
+				5&символ&вол&3&3 \\
+				\hline
+				6&буква&цифра&4&4 \\
+				\hline
+				7&нос&лицо&4&4 \\
+				\hline
+				8&кот&кит&1&1 \\
+				\hline
+				9&танк&танкист&3&3 \\
+				\hline
+				10&я&рябина&5&5 \\
+				\hline
+				11&крот&корт&2&1 \\
+				\hline
+				12&глина&лгиан&4&2 \\
+				\hline
+			\end{tabular}
+		\end{threeparttable}
+	\end{center}
+\end{table}
+
+\section{Вывод}
+
+Были представлены всех алгоритмов нахождения расстояния Левенштейна и Дамерау-Левенштейна, которые были описаны в предыдущем разделе. Также в данном разделе была приведена информации о выбранных средствах для разработки алгоритмов.

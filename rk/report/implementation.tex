@@ -1,0 +1,152 @@
+\chapter{Технологическая часть}
+\hspace{\parindent}В данном разделе будут рассмотрены средства реализации, а также представлены листинги реализаций алгоритма линейной обработки данных и алгоритма сногопоточной обработки данных.
+
+\section{Средства реализации}
+\hspace{\parindent}В данной работе для реализации был выбран язык программирования C++. Его возможностей достаточно для измерения процессорного времени и реализации алгоритмов. Для создания потоков был использован класс $thread$ \cite{thread}.
+
+
+\section{Реализация алгоритмов}
+\hspace{\parindent}В листингах \ref{lst:linear}-\ref{lst:conveyor} представлены реализации алгоритмов линейной и многопоточной обработки даных.
+\clearpage
+
+\begin{center}
+	\captionsetup{justification=raggedright,singlelinecheck=off}
+    \begin{lstlisting}[label=lst:linear, caption=Алгоритм линейной обработки данных]
+void linear_execution(int count, size_t size, bool is_print)
+{
+	time_now = 0;
+	for (int i = 0; i < count; i++)
+	{
+		matrix_t matrix = matrix_generate(size);
+		matrix.det = matrix_determinant(matrix, 0, matrix.size, 1);
+		matrix_dump(matrix);
+	}
+}
+    \end{lstlisting}
+\end{center}
+
+
+
+\begin{center}
+	\captionsetup{skip=0pt,justification=raggedright,singlelinecheck=off}
+    \begin{lstlisting}[label=lst:conveyor,language=Python,caption=Алгоритм конвейерной обработки данных]
+void parallel_execution(int count, size_t size)
+{
+	std::thread threads[];
+	for (int i = 0; i < count; i++)
+		thread(i) = std::thread(stage_parallel, size_matrix, degree);
+		threads[i].push(size);
+	for (int i = 0; i < 3; i++)
+		threads[i].join();
+}
+\end{lstlisting}
+\end{center}
+\clearpage
+
+\begin{center}
+	\captionsetup{skip=0pt,justification=raggedright,singlelinecheck=off}
+	\begin{lstlisting}[label=lst:gen,language=Python,caption=Алгоритм генерации квадратной матрицы]
+matrix_t matrix_generate(size_t size)
+{
+	std::vector<std::vector<int>> tmp_data;
+	tmp_data.resize(size);
+	for (size_t i = 0; i < size; i++)
+	tmp_data[i].resize(size);
+	matrix_t matrix;
+	matrix.size = size;
+	matrix.data = tmp_data;
+	matrix.det = 0;
+	for (size_t i = 0; i < matrix.size; i++)
+	for (size_t j = 0; j < matrix.size; j++)
+	matrix.data[i][j] = std::experimental::randint(1, 10);
+	return matrix;
+}
+	\end{lstlisting}
+\end{center}
+\begin{center}
+	\captionsetup{skip=0pt,justification=raggedright,singlelinecheck=off}
+	\begin{lstlisting}[label=lst:det,language=Python,caption=Алгоритм вычисления детерминанта матрицы]
+int matrix_determinant(matrix_t &matrix, int start, int end, int newDegree)
+{
+	int det = 0;
+	int degree = newDegree;
+	int size = matrix.size;
+	if(size == 1)
+	return matrix.data[0][0];
+	else if(size == 2)
+	return matrix.data[0][0]*matrix.data[1][1] - matrix.data[0][1]*matrix.data[1][0];
+	else
+	{
+		for(int j = start; j < end; j++)
+		{
+			matrix_t copy = matrix_copy(matrix);
+			matrix_WithoutRowAnColumn(copy, 0, j);
+			det += degree * matrix.data[0][j] * matrix_determinant(copy, 0, copy.size, 1);;
+			degree = -degree;
+		}
+	}
+	return det;
+}
+	\end{lstlisting}
+\end{center}
+\clearpage
+\begin{center}
+\captionsetup{skip=0pt,justification=raggedright,singlelinecheck=off}
+\begin{lstlisting}[label=lst:dump,language=Python,caption=Алгоритм записи матрицы и детерминанта в файл]
+void matrix_dump(matrix_t matrix)
+{
+	ofstream logf(LOG, ios::app);
+	if (logf.is_open())
+	{
+		for (size_t i = 0; i < matrix.size; i++)
+		{
+			for (size_t j = 0; j < matrix.size; j++)
+			logf << matrix.data[i][j] << " ";
+			logf << "\n";
+		}
+		logf << "\n\nDet: " << matrix.det << "\n----------\n";
+		logf.close();
+	}
+}
+\end{lstlisting}
+\end{center}
+
+\section{Функциональные тесты}
+\hspace{\parindent}В таблице  \ref{tbl:testing} представлены функциональные тесты для программы.
+\begin{table}[h]
+	\begin{center}
+		\captionsetup{skip=0pt,justification=raggedright,singlelinecheck=off}
+		\caption{Функциональные тесты}
+		\label{tbl:testing}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			Матрица & Линейная & Многопоточная\\
+			\hline
+			 $\begin{pmatrix}
+				0 & 1 & 2\\
+				1 & 0 & 3\\
+				2 & 4 & 0
+			\end{pmatrix}$ &
+			14 &
+			14 \\
+			\hline
+			$\begin{pmatrix}
+				4 & 7 & 2 & 1 & 4\\
+				4 & 2 & 3 & 5 & 2\\
+				4 & 3 & 7 & 9 & 1\\
+				3 & 7 & 9 & 2 & 9\\
+				7 & 9 & 3 & 1 & 7
+			\end{pmatrix}$ &
+			-867 & -867 \\
+			\hline
+			$\begin{pmatrix}
+				1 & 3 & 2 & 2\\
+				7 & 4 & 2 & 5\\
+				4 & 6 & 1 & 4\\
+				2 & 6 & 9 & 7
+			\end{pmatrix}$ &
+			71 & 71 \\
+			\hline
+		\end{tabular}	
+	\end{center}
+\end{table}

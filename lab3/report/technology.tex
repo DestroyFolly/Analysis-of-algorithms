@@ -1,0 +1,115 @@
+\chapter{Технологическая часть}
+
+В данном разделе будут указаны средства реализации, будут представлены листинги кода, а также функциональные тесты.
+
+\section{Средства реализации}
+
+Реализация данной лабораторной работы выполнялась при помощи языка программирования Python \cite{python}. 
+В текущей лабораторной работе было необходимо определить процессорное время, затрачиваемое на выполнение программы, а также построить графики. 
+Все необходимые инструменты для этого имеются в выбранном языке программирования.
+
+Замеры времени проводились при помощи функции process\_time из библиотеки time \cite{python-time}.
+
+\section{Сведения о модулях программы}
+
+Программа состоит из следующих модулей:
+
+\begin{itemize}
+	\item main.py - главный файл программы, предоставляющий пользователю меню для выполнения основных функций;
+	\item sort.py - файл, содержащий функции сортировок массива;
+	\item arr.py - файл, содержащий функции создания массива различного типа и работы с массивом;
+	\item time\_test.py - файл, содержащий функции замеров времени работы сортировок;
+	\item graph\_result.py - файл, содержащий функции визуализации временных характеристик алгоритмов сортировок.
+\end{itemize}
+
+\section{Реализация алгоритмов}
+
+Реализации алгоритмов сортировок выбором, бусинами и блочной сортировки представлены на листингах \ref{lst:selection_sort}, \ref{lst:bead_sort}, \ref{lst:bucket_sort}.
+
+\begin{center}
+\captionsetup{justification=raggedright,singlelinecheck=off}
+\begin{lstlisting}[label=lst:selection_sort,caption=Алгоритм сортировки выбором]
+def selection_sort(arr, size):
+    for i in range(size - 1):
+        min_element = arr[i]
+        min_index = i
+
+        for j in range(i + 1, size):
+            if arr[j] < min_element:
+                min_element = arr[j]
+                min_index = j
+        
+        arr[i], arr[min_index] = arr[min_index], arr[i]
+
+	return arr
+\end{lstlisting} 
+\end{center}
+
+\begin{center}
+\captionsetup{justification=raggedright,singlelinecheck=off}
+\begin{lstlisting}[label=lst:bead_sort,caption=Алгоритм сортировки бусинами]
+def bead_sort(input_list, size):
+	return_list = []
+	transposed_list = [0] * max(input_list)
+	for num in input_list:
+		transposed_list[:num] = [n + 1 for n in transposed_list[:num]]
+	for i in range(size):
+		return_list.append(sum(n > i for n in transposed_list))
+	return return_list
+
+\end{lstlisting}
+\end{center}
+
+\clearpage
+
+\begin{center}
+\captionsetup{justification=raggedright,singlelinecheck=off}
+\begin{lstlisting}[label=lst:bucket_sort,caption=Алгоритм блочной сортировки]
+def bucket_sort(array, length):
+	largest = max(array)
+	size = largest / length
+
+	buckets = [[] for i in range(length)]
+
+	for i in range(length):
+		index = int(array[i] / size)
+		if index != length:
+			buckets[index].append(array[i])
+		else:
+			buckets[length - 1].append(array[i])
+
+	for i in range(len(array)):
+		buckets[i] = sorted(buckets[i])
+
+	result = []
+	for i in range(length):
+		result = result + buckets[i]
+
+	return result
+\end{lstlisting}
+\end{center}
+
+\section{Функциональные тесты}
+
+В таблице \ref{tbl:func-tests} приведены функциональные тесты для функций, реализующих алгоритмы сортировок. Все тесты пройдены успешно.
+
+\begin{table}[h]
+	\begin{center}
+		\caption{\label{tbl:func-tests} Функциональные тесты}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			Входной массив & Ожидаемый результат & Результат \\ 
+			\hline
+			$[1, 2, 3, 4, 5, 6]$ & $[1, 2, 3, 4, 5, 6]$  & $[1, 2, 3, 4, 5, 6]$\\
+			$[5, 4, 3, 2, 1]$  & $[1, 2, 3, 4, 5]$ & $[1, 2, 3, 4, 5]$\\
+			$[4, 5, 3, 7, 8]$  & $[3, 4, 5, 7, 8]$  & $[3, 4, 5, 7, 8]$\\
+			$[17]$  & $[17]$  & $[17]$\\
+			$[]$  & $[]$  & $[]$\\
+			\hline
+		\end{tabular}
+	\end{center}
+\end{table}
+
+\section*{Вывод}
+
+Были реализованы функции алгоритмов сортировки выбором, бусинами и блочной. Было проведено функциональное тестирование указанных функций.
